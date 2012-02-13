@@ -1,0 +1,108 @@
+ecrm:E12_Production	v	malen	de
+ecrm:E12_Production	v	zeichnen	de
+ecrm:E12_Production	v	herstellen	de
+ecrm:E12_Production	v	produzieren	de
+ecrm:E12_Production	v	machen	de
+ecrm:E12_Production	v	erzeugen	de
+ecrm:E12_Production	v	errichten	de
+ecrm:E12_Production		by-product	en
+ecrm:E12_Production		byproduct	en
+ecrm:E12_Production		composit	en
+ecrm:E12_Production		creation	en
+ecrm:E12_Production	 	end product	en
+ecrm:E12_Production		innov	en
+ecrm:E12_Production		invent	en
+ecrm:E12_Production		made	en
+ecrm:E12_Production	 	magnum opu	en
+ecrm:E12_Production		make	en
+ecrm:E12_Production		needlecraft	en
+ecrm:E12_Production		needlework	en
+ecrm:E12_Production		output	en
+ecrm:E12_Production	  	piec of work	en
+ecrm:E12_Production		produced	en
+ecrm:E12_Production		produce	en
+ecrm:E12_Production		product	en
+ecrm:E12_Production		remak	en
+ecrm:E12_Production		sculptur	en
+ecrm:E12_Production		turnout	en
+ecrm:E12_Production		work	en
+ecrm:E12_Production		yield	en
+ecrm:E67_Birth	v	gebären	de
+ecrm:E67_Birth	v	zur Welt bringen	de
+ecrm:E67_Birth	a	geboren	de
+ecrm:E67_Birth	v	+	de
+ecrm:E67_Birth	n	Geburt	de
+ecrm:E67_Birth	a	born	en
+ecrm:E67_Birth		bear	en
+ecrm:E67_Birth		birth	en
+ecrm:E67_Birth		childbear	en
+ecrm:E67_Birth		childbirth	en
+ecrm:E67_Birth		+	en
+ecrm:E67_Birth	 	give birth	en
+ecrm:E69_Death	v	sterben	de
+ecrm:E69_Death	v	töten	de
+ecrm:E69_Death	v	umbringen	de
+ecrm:E69_Death	v	ableben	de
+ecrm:E69_Death	v	ermorden	de
+ecrm:E69_Death	n	Tod	de
+ecrm:E69_Death	n	Mord	de
+ecrm:E69_Death	a	tot	de
+ecrm:E69_Death		brain	en
+ecrm:E69_Death	 	cerebr death	en
+ecrm:E69_Death		death	en
+ecrm:E69_Death		died	en
+ecrm:E69_Death		die	en
+ecrm:E69_Death		grave	en
+ecrm:E8_Acquisition	v	kaufen	de
+ecrm:E8_Acquisition	v	verkaufen	de
+ecrm:E8_Acquisition	v	ankaufen	de
+ecrm:E8_Acquisition	v	einkaufen	de
+ecrm:E8_Acquisition	v	aneignen	de
+ecrm:E8_Acquisition	v	erstehen	de
+ecrm:E8_Acquisition	n	Kauf	de
+ecrm:E8_Acquisition	n	Verkauf	de
+ecrm:E8_Acquisition		acquir	en
+ecrm:E8_Acquisition		acquisit	en
+ecrm:E8_Acquisition		adopt	en
+ecrm:E8_Acquisition		becom	en
+ecrm:E8_Acquisition		carry-ov	en
+ecrm:E8_Acquisition		digest	en
+ecrm:E8_Acquisition		gain	en
+ecrm:E8_Acquisition		get	en
+ecrm:E8_Acquisition		incorpor	en
+ecrm:E8_Acquisition		intern	en
+ecrm:E8_Acquisition		take	en
+ecrm:E8_Acquisition		taken	en
+ecrm:E8_Acquisition	 	take on	en
+ecrm:E8_Acquisition		took	en
+ecrm:E8_Acquisition		win	en
+ecrm:E9_Move		bring	en
+ecrm:E9_Move		carri	en
+ecrm:E9_Move		circul	en
+ecrm:E9_Move		disloc	en
+ecrm:E9_Move		displac	en
+ecrm:E9_Move		drive	en
+ecrm:E9_Move		driven	en
+ecrm:E9_Move		drove	en
+ecrm:E9_Move		elev	en
+ecrm:E9_Move		exchang	en
+ecrm:E9_Move		go	en
+ecrm:E9_Move		gone	en
+ecrm:E9_Move		lai	en
+ecrm:E9_Move		mobil	en
+ecrm:E9_Move		move	en
+ecrm:E9_Move		place	en
+ecrm:E9_Move		posit	en
+ecrm:E9_Move		push	en
+ecrm:E9_Move		put	en
+ecrm:E9_Move	 	rais up	en
+ecrm:E9_Move		reloc	en
+ecrm:E9_Move		send	en
+ecrm:E9_Move	 	shake up	en
+ecrm:E9_Move		shift	en
+ecrm:E9_Move		slip	en
+ecrm:E9_Move	 	stir up	en
+ecrm:E9_Move		translat	en
+ecrm:E9_Move		transport	en
+ecrm:E9_Move		unseat	en
+ecrm:E9_Move		went	en

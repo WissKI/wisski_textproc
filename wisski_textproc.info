@@ -1,0 +1,8 @@
+; $Id$
+name = WissKI Semantic Text Analysis
+description = The backend for the semantic editor.
+core = 6.x
+package = "WissKI"
+dependencies[] = wysiwyg
+dependencies[] = wisski_vocab_ctrl
+

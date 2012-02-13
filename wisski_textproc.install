@@ -1,0 +1,197 @@
+<?php
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_textproc_install() {
+  
+  drupal_install_schema('wisski_textproc');
+
+  // load personnames file into table
+  _wisski_textproc_bulk_load('wisski_textproc_personnames', drupal_get_path('module', 'wisski_textproc') . '/default_personnames.csv');
+
+  // load events file into table
+  _wisski_textproc_bulk_load('wisski_textproc_events', drupal_get_path('module', 'wisski_textproc') . '/default_events.csv');
+
+  // set up a default vocab detection step
+  $default_vocab = array(
+    'wisski_textproc_pipes',
+    'Default vocabulary detection',
+    'default',
+    '',
+    0,
+    'wisski_textproc_vocab',
+    'wisski_textproc',
+    serialize(array(
+      "place_coords" => array(),
+      "rank_offset_coords_lat" => "0",
+      "rank_offset_coords_long" => "0",
+      "place_use_approved_coordinates" => 0,
+      "place_classes" => array(),
+      "rank_offset_exact" => "2",
+      "rank_offset_contains" => "1",
+      "rank_offset_guess" => "-1",
+      "rank_factor_length_contains" => "6",
+      "rank_factor_length_guess" => "-2",
+      "rank_offset_has_lemma" => array(),
+      "rank_offset_has_pos" => array(),
+    )),
+  );
+  db_query("INSERT INTO {%s} (name, profile, lang, weight, type, module, settings) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')", $default_vocab);
+
+}
+
+
+/** Load a csv file into a db table
+* This function can be used if LOAD DATA INFILE is not possible
+*
+* @author Martin Scholz
+*/
+function _wisski_textproc_bulk_load($table, $file) {
+  
+  if (!is_readable($file)) return;
+
+  $fh = fopen($file, 'r');
+  while (!feof($fh)) {
+    $lines = array();
+    for ($count = 0; $count < 1000 && !feof($fh); $count++) {
+      $line = fgets($fh);
+      if (preg_match('/^\s*$/', $line)) continue;
+      $line = str_replace("\n", '', $line);
+      $values = "";
+      foreach (explode("\t", $line) as $c)
+        $values .= (empty($values) ? "'" : ",'") . db_escape_string($c) . "'";
+      $lines[] = $values;
+    }
+    if (empty($lines)) break;
+    $lines = '(' . join('),(', $lines) . ')';
+    db_query("INSERT INTO {%s} VALUES $lines", $table, $lines);
+  }
+
+}
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_textproc_uninstall() {
+  drupal_uninstall_schema('wisski_textproc');
+}
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_textproc_schema() {
+  $schema['wisski_textproc_pipes'] = array(
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'profile' => array(
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'lang' => array(
+        'type' => 'varchar',
+        'length' => 11,
+        'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'settings' => array(
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('aid'),
+  );
+
+  $schema['wisski_textproc_personnames'] = array(
+    'fields' => array(
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+      ),
+      'offset' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'rank' => array(
+        'type' => 'float',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'lang' => array(
+        'type' => 'varchar',
+        'length' => 11,
+        'default' => '',
+      ),
+    ),
+    'indexed' => array(
+      'name' => array('name', 250),
+    ),
+  );
+
+  $schema['wisski_textproc_events'] = array(
+    'fields' => array(
+      'event' => array(
+        'type' => 'varchar',
+        'length' => 10000,
+        'not null' => TRUE,
+      ),
+      'pos' => array(
+        'type' => 'varchar',
+        'length' => 11,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 10000,
+        'not null' => TRUE,
+      ),
+      'lang' => array(
+        'type' => 'varchar',
+        'length' => 11,
+        'default' => '',
+      ),
+    ),
+    'indexed' => array(
+      'name' => array('name', 250),
+    ),
+  );
+
+
+  return $schema;
+}
+

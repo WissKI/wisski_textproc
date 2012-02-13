@@ -1,0 +1,510 @@
+<?php
+// $Id$
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_textproc_menu () {
+
+  $items = array();
+  /* admin settings */
+  $items['admin/settings/wisski/textproc'] = array(
+      'title' => 'Textproc',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_list'),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  $items['admin/settings/wisski/textproc/list'] = array(
+      'title' => 'List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_list'),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  $items['admin/settings/wisski/textproc/add'] = array(
+      'title' => 'Add',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_add'),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  $items['admin/settings/wisski/textproc/preprocessor'] = array(
+      'title' => 'Preprocessor',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_preprocessor'),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );    
+  $items['admin/settings/wisski/textproc/document'] = array(
+      'title' => 'Document settings',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_document_settings'),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  foreach (wisski_textproc_get_types() as $type => $info) {
+    if ($type == 'local') continue;
+    $items['admin/settings/wisski/textproc/add/' . $type] = array(
+        'title' => 'Add ' . $info['name'],
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wisski_textproc_admin_edit', NULL, $type),
+        'access arguments' => array('wisski administrate page'),
+        'file' => 'wisski_textproc.admin.inc',
+        );
+  }
+  $items['admin/settings/wisski/textproc/%/edit'] = array(
+      'title' => 'Edit',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_edit', 4),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  $items['admin/settings/wisski/textproc/%/delete'] = array(
+      'title' => 'Delete',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'wisski_textproc_admin_delete',
+      'page arguments' => array(4),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  $items['wisski/textproc/js/edit'] = array(
+      'type' => MENU_CALLBACK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_textproc_admin_edit_js', 3),
+      'access arguments' => array('wisski administrate page'),
+      'file' => 'wisski_textproc.admin.inc',
+      );
+  return $items;
+
+}
+
+
+/** Analyses a HTML fragment
+*
+* @parameter $text the html fragment
+* @parameter $lang the default document language
+* @parameter $profile the profile of the analysis configuration
+*   (this currentyl is not supported by the admin interface)
+*
+* @return a list of proposed annotations
+*
+* @author Martin Scholz
+*
+*/
+function wisski_textproc_analyse_xhtml_fragment($text, $lang = '', $profile = 'default') {
+  include_once(dirname(__FILE__) . '/wisski_textproc.analyse.inc');
+  return _wisski_textproc_analyse_xhtml_fragment($text, $lang, $profile);
+}
+
+
+/** Takes a fragment of HTML and extracts text information
+* 
+* @parameter $text the HTML fragment
+* @parameter $default_lang the document defualt language
+
+* @return an array of text information containing 
+* - text: The pure text contents.
+    UTF8 encoded; use multibyte methods mb_* or //u flag in preg_*!
+    Some HTML tags are replaces by a whitespace character to separate words
+    (e.g. <br/>, <p>, ...)
+* - char_shifts: due to ws-insertion for tags, the (P)CDATA character position
+    in the HTML doc may vary from the position in pure text string.
+    This is an assoc array with pairs
+    <#shifted chars> => <max text pos with that shift (excluded)>
+    e.g. an array(0 => 12, 1 => 14, 2 => 34) says that all char positions until
+    excluding char 12 have to be shifted left 0, until excluding char 14
+    shifted left 1, etc. to obtain the char position in the HTML
+* - lang_ranges: an array with keys being language labels and values being each
+*   a list of text intervals that are marked in this language.
+*   Intervals are encoded as array(start, end). E.g.
+*   array(
+        'en' => array(array(10, 20)),
+        'de' => array(array(0, 10), array(20, 30)))
+* - annos: an array of annotations found in the text
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_strip_tags($xhtml, $default_lang = '') {
+  include_once(dirname(__FILE__) . '/wisski_textproc.inc');
+  return _wisski_textproc_strip_tags($xhtml, $default_lang);
+}
+
+
+/** generate triples from a HTML fragment
+*
+* @parameter $xhtml the html fragment
+* @parameter $doc_uri the instance URI of this document 
+* @parameter $params additional parameters for triple generation
+*
+* @return a list of triples in ARC2 structure
+*/
+function wisski_textproc_triplify_xhtml($xhtml, $doc_uri, $params = array()) {
+  include_once(dirname(__FILE__) . '/wisski_textproc.inc');
+  return _wisski_textproc_triplify_xhtml($xhtml, $doc_uri, $params);
+}
+
+
+/** Get a information about available analysis component types.
+* This calls hook_wisski_textproc()
+* 
+* @return if $type and $col is set, the value of key $col for type $type.
+*   If only $type is set, return all info about type $type.
+*   If $type is NULL, return info about all available types.
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_get_types($type = NULL, $col = NULL) {
+  include_once('wisski_textproc.inc');
+  return _wisski_textproc_get_types($type, $col);
+}
+
+/** Get one or multiple analysis step objects from db
+*
+* @return If $aid and $col is set, the value of key $col for step with id $aid.
+*   If only $aid is set, return step object with id $aid.
+*   If $aid is NULL, return all step objects sorted by weight.
+*
+* @author Martin Scholz
+*
+*/
+function wisski_textproc_get($aid = NULL, $col = NULL, $refresh = FALSE) {
+  include_once('wisski_textproc.inc');
+  return _wisski_textproc_get($aid, $col, $refresh);
+}
+
+
+/** Save step object to db
+* $ap may be changed, e.g. an id may be added
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_save(&$ap) {
+  include_once('wisski_textproc.inc');
+  return _wisski_textproc_save($ap);
+}
+
+/** delete a step object
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_delete($aid) {
+  db_query('DELETE FROM {wisski_textproc_pipes} WHERE aid = %d', $aid);
+  return TRUE;
+}
+
+
+/** Implementation of hook_wisski_textproc
+*
+* With this hook modules can provide their own analysis component types.
+* 
+* @parameter $op Operation may be
+* - list: get a list of defined types with info.
+* - settings: TODO: what does this do? 
+* - analyse: analyse a piece of text
+* - operations: list available admin operations (for display in the admin list tab)
+* - edit: the form for adding/editing a step
+* - validate: validate the edit form
+* - submit: submit the edit form
+*
+* @parameter $ap the analysis step object; ignorable when $op is 'list'
+*
+* The other parameters depend on $op:
+* - list: no params
+* - settings: (no info)
+* - analyse: 
+*   - $type: the step type
+*   - $profile: the profile to be applied
+*   - $lang: the text language
+*   - $text: the text to be analysed
+*   - $tokens: the text as sequence of tokens
+*     Tokens are arrays of form
+*     array(<surface>, <start pos>, <end pos>)
+*     Keys 'lemma' and 'pos' may be set
+*     if a lemma and part-of-speech info is available.
+*   - $annos: already set/found annotations
+*   - $settings: settings for the step
+* - operations, edit, validate, submit:
+*   - $ap: the step object
+*
+* @return depends on $op
+* - list: get a list of defined types with info.
+*   keys are type id, the value is an info array that contains
+*   - title: the label of the type
+*   - description: a description of the type
+*   - langs: a list of languages this component type may be applied to.
+*     A single entry '' means all languages.
+*   - multiple: if multiple steps of this component type may be instanciated
+* - settings: TODO: what does this do? 
+* - analyse: an array of annotations
+* - operations: an assoc array of admin operations for this type mapped to
+*   their URL callbacks
+* - edit: the form array
+* - validate, submit: nothing
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_wisski_textproc($op, $ap = NULL) {
+
+  switch ($op) {
+    case 'list':
+      return array(
+        'wisski_textproc_vocab' => array(
+          'title' => t('Detection of Vocabulary Entries'),
+          'description' => t('Detection of mentions of vocabulary entries.'),
+          'langs' => array(''),
+          'multiple' => FALSE,
+        ),
+        'wisski_textproc_person' => array(
+          'title' => t('Detection of Person Names'),
+          'description' => t('Detection of person names'),
+          'langs' => array(''),
+          'multiple' => FALSE,
+        ),
+        'wisski_textproc_datetime' => array(
+          'title' => t('Detection of Dates & Times'),
+          'description' => t('Detection of statements about temporal location'),
+          'langs' => array('de', 'en'),
+          'multiple' => FALSE,
+        ),
+        'wisski_textproc_regexp' => array(
+          'title' => t('Regular Expression Pattern'),
+          'description' => t('Detection of patterns withs regular expressions'),
+          'langs' => array(''),
+          'multiple' => TRUE,
+        ),
+      );
+
+    case 'settings':
+      
+      list(, $id, $profile, $lang, $settings) = func_get_args();
+      $form = array();
+      return $form;
+
+    case 'analyse':
+      
+      list(, $id, $profile, $lang, $text, $tokens, $annos, $settings) = func_get_args();
+
+      switch ($id) {
+        case 'wisski_textproc_vocab':
+          include_once(dirname(__FILE__) . '/wisski_textproc.analyse.inc');
+          return _wisski_textproc_analyse_vocab($profile, $lang, $text, $tokens, $annos, $settings);
+
+        case 'wisski_textproc_person':
+          include_once(dirname(__FILE__) . '/wisski_textproc.analyse.inc');
+          return _wisski_textproc_analyse_automaton($profile, $lang, $text, $tokens, $annos, $settings);
+  
+        case 'wisski_textproc_datetime':
+          include_once(dirname(__FILE__) . '/wisski_textproc.analyse.inc');
+          return _wisski_textproc_analyse_datetime($profile, $lang, $text, $tokens, $annos, $settings);
+          
+        case 'wisski_textproc_regexp':
+          include_once(dirname(__FILE__) . '/wisski_textproc.analyse.inc');
+          return _wisski_textproc_analyse_regexp($profile, $lang, $text, $tokens, $annos, $settings);
+          
+      }
+      
+    default:
+	
+		include_once('wisski_textproc.inc');
+		if (function_exists('wisski_textproc_wisski_textproc_' . $ap->type)) {
+		  return call_user_func('wisski_textproc_wisski_textproc_' . $ap->type, $op, $ap);
+		} else {
+		  return NULL;
+		}
+
+   
+
+  }
+
+}
+
+
+/** Get all instances that are defined as subjects of a text instance
+*
+* @parameter the text instance URI (not the node URL!)
+*
+* @return a list of URIs
+*
+* @author Martin Scholz
+*
+*/
+function wisski_textproc_get_subjects($doc_uri) {
+  
+  $tmp = variable_get('wisski_textproc_paths', array());
+  $path_id = isset($tmp['subject']) ? $tmp['subject'] : NULL;
+  if (!$path_id) return;
+
+  include_once(drupal_get_path('module', 'wisski_pathbuilder') . '/wisski_pathbuilder.inc');
+
+  $path_data = wisski_pathbuilder_getPathData($path_id);
+
+  if ($path_data['is_group']) {
+    $path_array = _wisski_pathbuilder_calculate_group_samepart($path_id);
+  } else {
+    $path_array = unserialize($path_data['path_array']);
+  }
+  
+  // build up the sparql query; we cannot use the wisski_pathbuilder function
+  // as we don't want to check rdf:type triple of the subject
+  $sparql = 'SELECT ?subject WHERE { <' . $doc_uri . '> ';
+  $i = 0;
+  for (; isset($path_array['x' . ($i + 2)]); $i++) {
+    
+    $sparql .= ' <' . $path_array["y$i"] . "> ?x$i. ";
+    $sparql .= " ?x$i <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <" . $path_array['x' . ($i + 1)] . '>. ';
+    
+  }
+  
+  $sparql .= ' <' . $path_array["y$i"] . '> ?subject . }';
+  
+  $store = wisski_store_getObj()->wisski_ARCadapter_getStore();
+
+  $subjects = array();
+  $rows = $store->query($sparql, 'rows');
+  if ($store->getErrors()) {
+    foreach ($store->getErrors() as $e) drupal_set_message("sparql error: $e");
+  } else {
+    foreach ($rows as $row) $subjects[] = $row['subject'];
+  }
+  return $subjects;
+
+}
+
+
+/** Set instance $subject_uri as subjet of text $doc_uri
+*
+* @return nothing
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_set_subject($doc_uri, $subject_uri) {
+
+  $tmp = variable_get('wisski_textproc_paths', array());
+  $path_id = isset($tmp['subject']) ? $tmp['subject'] : NULL;
+  if (!$path_id) return;
+
+  include_once(drupal_get_path('module', 'wisski_pathbuilder') . '/wisski_pathbuilder.inc');
+
+  $path_data = wisski_pathbuilder_getPathData($path_id);
+
+  if ($path_data['is_group']) {
+    $path_array = _wisski_pathbuilder_calculate_group_samepart($path_id);
+  } else {
+    $path_array = unserialize($path_data['path_array']);
+  }
+  
+  // construct triples and store them
+  // we can't use the wisski_pathbuilder function as the class of the subject should not be stored!
+  $last = $doc_uri;
+  $triples = array();
+  for ($i = 0; $i < floor(count($path_array) / 2); $i++) {
+    $next = isset($path_array['x' . ($i + 2)]) ? wisski_textproc_instance_prefix . wisski_get_uuid(4) . '_' . $path_id : $subject_uri;
+    $triples[] = array(
+      's' => $last,
+      's_type' => 'uri',
+      'p' => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+      'o' => $path_array["x$i"],
+      'o_type' => 'uri',
+    );
+    $triples[] = array(
+      's' => $last,
+      's_type' => 'uri',
+      'p' => $path_array["y$i"],
+      'o' => $next,
+      'o_type' => 'uri',
+    );
+    $last = $next;
+  }
+  
+  foreach ($triples as $t) $n = wisski_store_addNodeForTriple($t);
+
+  $store = wisski_store_getObj()->wisski_ARCAdapter_getStore();
+  $res = $store->insert($triples, wisski_store_getObj()->wisski_ARCAdapter_graphName());
+  if ($store->getErrors()) {
+    foreach ($store->getErrors() as $e) drupal_set_message("sparql error: $e");
+  }
+  
+}
+
+
+/** Get the text instances associated with instance $subject_uri
+*
+* @return a list of all text instance URIs associated with $subject_uri
+*
+* @author Martin Scholz
+*/
+function wisski_textproc_get_texts($subject_uri) {
+  
+  $tmp = variable_get('wisski_textproc_paths', array());
+  $path_id = isset($tmp['subject']) ? $tmp['subject'] : NULL;
+  if (!$path_id) return;
+
+  include_once(drupal_get_path('module', 'wisski_pathbuilder') . '/wisski_pathbuilder.inc');
+
+  $path_data = wisski_pathbuilder_getPathData($path_id);
+
+  if ($path_data['is_group']) {
+    $path_array = _wisski_pathbuilder_calculate_group_samepart($path_id);
+  } else {
+    $path_array = unserialize($path_data['path_array']);
+  }
+  
+  // build up the sparql query; we cannot use the wisski_pathbuilder function
+  // as we don't want to check rdf:type triple of the subject
+  $sparql = 'SELECT ?doc WHERE { ?doc ';
+  $i = 0;
+  for (; isset($path_array['x' . ($i + 2)]); $i++) {
+    
+    $sparql .= ' <' . $path_array["y$i"] . "> ?x$i. ";
+    $sparql .= " ?x$i <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <" . $path_array['x' . ($i + 1)] . '>. ';
+    
+  }
+  
+  $sparql .= ' <' . $path_array["y$i"] . '> <' . $subject_uri . '> . }';
+  
+  $store = wisski_store_getObj()->wisski_ARCAdapter_getStore();
+
+  $docs = array();
+  $rows = $store->query($sparql, 'rows');
+  if ($store->getErrors()) {
+    foreach ($store->getErrors() as $e) drupal_set_message("sparql error: $e");
+  } else {
+    foreach ($rows as $row) $docs[] = $row['doc'];
+  }
+  return $docs;
+
+}
+
+
+/**Get the prefix for creating new instance URIs
+* TODO: Should be moved to module wisski
+*
+* @author Martin Scholz
+*/
+function wisski_instance_prefix() {
+  global $base_root, $base_path;
+  return $base_root . $base_path . "content/";
+}
+
+
+/** hook_theme implementation for theming the table in admin list tab
+*
+* @author Florian Wittmann
+*/
+function wisski_textproc_theme() {
+  return array(
+    'wisski_textproc_admin_list' => array(
+      'file' => 'wisski_textproc.admin.inc',
+      'arguments' => array('form' => NULL),
+    ),
+  );
+}
