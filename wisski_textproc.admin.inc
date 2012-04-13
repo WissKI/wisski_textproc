@@ -14,32 +14,74 @@ function wisski_textproc_getfromaid($aid) {
 }
 
 
+
+function wisski_textproc_admin_document_settings_getMembers ($group_id) {
+	
+  $group_members = array();
+  $group_members["-1"] = t("<None>");
+  foreach (wisski_pathbuilder_getAllMembers($group_id, FALSE) as $id) {
+	  $info = wisski_pathbuilder_getPathData($id);
+	  //drupal_set_message('<pre>'. print_r($info['name'], TRUE) .'</pre>');
+	  if ($info['enabled'] == 1) $group_members["$id"] = $info['name'];
+  }
+  return $group_members;
+}
+
+
+
+
+
 /**
-* @author Martin Scholz 
+* @author Martin Scholz, Florian Wittmann
 */
 function wisski_textproc_admin_document_settings ($form_state) {
+
+  drupal_load('module', 'wisski_pathbuilder');
+  include_once(drupal_get_path('module', 'wisski_pathbuilder') . '/wisski_pathbuilder.inc');
+
+  //for pb_group: display every top group of the import PB section
+  $pb_groups = array();
+  foreach (wisski_pathbuilder_getEnabledGroups(3) as $id) {
+    $info = wisski_pathbuilder_getPathData($id);
+    if ($info['group_id'] < 1) $pb_groups["$id"] = $info['name'];
+  }
+
+
+
+
+
+
 
   $settings = variable_get('wisski_textproc_paths', array());
   $form = array();
   $form['doc_class'] = array(
-      '#type' => 'textfield',
+      '#type' => 'select',
+      '#multiple' => false,
+      '#options' => $pb_groups,
       '#title' => t('Group for documents'),
+      '#description' => t('If you change this group, please first click submit, before change the subgroups below!'),
       '#default_value' => isset($settings['doc_class']) ? $settings['doc_class'] : '',
       );
   $form['creator'] = array(
-      '#type' => 'textfield',
+      '#type' => 'select',
+      '#multiple' => false,
       '#title' => t('Path for creator of a document'),
+      '#options' => wisski_textproc_admin_document_settings_getMembers(isset($settings['doc_class']) ? $settings['doc_class'] : ''),
       '#default_value' => isset($settings['creator']) ? $settings['creator'] : '',
       );
   $form['subject'] = array(
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => t('Path for subject of a document'),
+      '#multiple' => false,
       '#default_value' => isset($settings['subject']) ? $settings['subject'] : '',
+            '#options' => wisski_textproc_admin_document_settings_getMembers(isset($settings['doc_class']) ? $settings['doc_class'] : ''),
       );
   $form['refers_to'] = array(
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => t('Path for referred objects'),
+      '#multiple' => false,
       '#default_value' => isset($settings['refers_to']) ? $settings['refers_to'] : '',
+            '#options' => wisski_textproc_admin_document_settings_getMembers(isset($settings['doc_class']) ? $settings['doc_class'] : ''),
       );
   $form['default_doc_lang'] = array(
       '#type' => 'radios',
@@ -53,6 +95,9 @@ function wisski_textproc_admin_document_settings ($form_state) {
       '#value' => t('Save configuration'),
       );
 
+
+	
+  
   return $form;
 
 }
@@ -65,9 +110,9 @@ function wisski_textproc_admin_document_settings_submit ($form, $form_state) {
 
   $settings = array();
   $settings['doc_class'] = $form_state['values']['doc_class'];
-  $settings['creator'] = $form_state['values']['creator'];
-  $settings['subject'] = $form_state['values']['subject'];
-  $settings['refers_to'] = $form_state['values']['refers_to'];
+  if ($form_state['values']['creator'] != -1) $settings['creator'] = $form_state['values']['creator'];
+  if ($form_state['values']['subject'] != -1) $settings['subject'] = $form_state['values']['subject'];
+  if ($form_state['values']['refers_to'] != -1) $settings['refers_to'] = $form_state['values']['refers_to'];
   variable_set('wisski_textproc_paths', $settings);
   variable_set('wisski_textproc_default_document_lang', $form_state['values']['default_doc_lang']);
 
